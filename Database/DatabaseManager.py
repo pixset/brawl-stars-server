@@ -3,7 +3,14 @@ import sqlite3
 import traceback
 import os
 
-DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.sqlite')
+# Путь к базе. На Railway укажи DB_PATH на смонтированный Volume,
+# например /data/player.sqlite — иначе база стирается при каждом редеплое.
+DB_PATH = os.environ.get('DB_PATH', '').strip() or \
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.sqlite')
+
+_db_dir = os.path.dirname(DB_PATH)
+if _db_dir:
+    os.makedirs(_db_dir, exist_ok=True)
 
 
 class DatabaseManager():
