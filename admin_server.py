@@ -12,13 +12,40 @@ _ROOT = os.path.dirname(os.path.abspath(__file__))
 if _ROOT not in sys.path:
     sys.path.insert(0, _ROOT)
 
-from flask import Flask, jsonify, request, send_from_directory, abort
+from functools import wraps
+from flask import Flask, jsonify, request, send_from_directory, abort, redirect, Response
 
 from Database.DatabaseManager import DatabaseManager
 
 app = Flask(__name__)
 
 CDN_DIR = os.path.join(_ROOT, 'ContentUpdater', 'Update')
+
+# Пароль на админку. Задаётся переменной окружения ADMIN_PASSWORD.
+# Если не задан — панель открыта (как и раньше), но в логах будет предупреждение.
+ADMIN_PASSWORD = os.environ.get('ADMIN_PASSWORD', '').strip()
+if not ADMIN_PASSWORD:
+    print('[Admin] WARNING: ADMIN_PASSWORD не задан — панель открыта всем!')
+
+
+def require_auth(fn):
+    """Basic-Auth защита для /admin и /admin/api/*. Логин любой, пароль = ADMIN_PASSWORD."""
+    @wraps(fn)
+    def wrapper(*args, **kwargs):
+        if ADMIN_PASSWORD:
+            auth = request.authorization
+            if not auth or auth.password != ADMIN_PASSWORD:
+                return Response(
+                    'Auth required', 401,
+                    {'WWW-Authenticate': 'Basic realm="BSDS Admin"'})
+        return fn(*args, **kwargs)
+    return wrapper
+
+
+@app.route('/')
+def root():
+    """Голый домен → сразу в админку (вместо 404 от CDN-роута)."""
+    return redirect('/admin')
 
 # ══════════════════════════════════════════════════════════
 #  CDN — serves game asset files (fingerprint, resources)
@@ -49,12 +76,14 @@ def health():
 # ══════════════════════════════════════════════════════════
 
 @app.route('/admin/api/players')
+@require_auth
 def api_players():
     db = DatabaseManager()
     return jsonify(db.getAllPlayersData())
 
 
 @app.route('/admin/api/player/<int:low_id>')
+@require_auth
 def api_player(low_id):
     db = DatabaseManager()
     data = db.getPlayerData(low_id)
@@ -64,6 +93,7 @@ def api_player(low_id):
 
 
 @app.route('/admin/api/gems', methods=['POST'])
+@require_auth
 def api_gems():
     body = request.get_json(force=True)
     low_id = int(body.get('player_id', 0))
@@ -84,6 +114,7 @@ def api_gems():
 
 
 @app.route('/admin/api/gems/set', methods=['POST'])
+@require_auth
 def api_gems_set():
     body = request.get_json(force=True)
     low_id = int(body.get('player_id', 0))
@@ -99,6 +130,7 @@ def api_gems_set():
 
 
 @app.route('/admin/api/trophies', methods=['POST'])
+@require_auth
 def api_trophies():
     """
     Set trophies.
@@ -127,6 +159,7 @@ def api_trophies():
 
 
 @app.route('/admin/api/coins', methods=['POST'])
+@require_auth
 def api_coins():
     body = request.get_json(force=True)
     low_id = int(body.get('player_id', 0))
@@ -462,6 +495,7 @@ loadPlayers();
 
 @app.route('/admin')
 @app.route('/admin/')
+@require_auth
 def admin_panel():
     brawler_opts = '\n'.join(
         f'<option value="{b["id"]}">{b["name"]}</option>'
