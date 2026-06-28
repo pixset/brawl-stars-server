@@ -5,9 +5,15 @@ from Logic.Data.DataManager import Writer
 
 
 def _get_cdn_url():
+    # 1) Явно заданный CDN (например свой домен)
     cdn = os.environ.get('CDN_HOST', '').strip()
     if cdn:
         return cdn
+    # 2) Публичный домен, который Railway выставляет автоматически
+    dom = os.environ.get('RAILWAY_PUBLIC_DOMAIN', '').strip()
+    if dom:
+        return f'https://{dom}'
+    # 3) Локальный фолбэк (только для запуска на своей машине)
     port = os.environ.get('PORT', '8080')
     try:
         ip = socket.gethostbyname(socket.gethostname())

@@ -1,0 +1,25 @@
+2026-06-28T21:17:25.876879716Z [inf]  Mounting volume on: /var/lib/containers/railwayapp/bind-mounts/df85b40d-c10f-47e2-8868-38ba7150f383/vol_pmy1yvju5jmfyj0e
+2026-06-28T21:17:25.876880928Z [inf]  Starting Container
+2026-06-28T21:17:26.143085724Z [inf]  =======================================================
+2026-06-28T21:17:26.143091244Z [inf]    BSDS Private Server — Starting up
+2026-06-28T21:17:26.143095414Z [inf]  =======================================================
+2026-06-28T21:17:26.143098224Z [inf]  [Setup] Created fingerprint.json for sha=a6d552adbad950c42362e67063a778748a3e3211
+2026-06-28T21:17:26.143100583Z [inf]  [Admin] HTTP server on port 9339
+2026-06-28T21:17:26.143103013Z [inf]  [Admin] Panel → http://0.0.0.0:9339/admin
+2026-06-28T21:17:26.143106133Z [inf]   * Serving Flask app 'admin_server'
+2026-06-28T21:17:26.143109073Z [inf]   * Debug mode: off
+2026-06-28T21:17:26.143111753Z [err]  [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+2026-06-28T21:17:26.143115423Z [err]   * Running on all addresses (0.0.0.0)
+2026-06-28T21:17:26.143118633Z [err]   * Running on http://127.0.0.1:9339
+2026-06-28T21:17:26.143121083Z [err]   * Running on http://10.181.169.5:9339
+2026-06-28T21:17:26.143124413Z [err]  [33mPress CTRL+C to quit[0m
+2026-06-28T21:17:26.143126943Z [err]  Exception in thread GameServer:
+2026-06-28T21:17:26.143129563Z [err]  Traceback (most recent call last):
+2026-06-28T21:17:26.143132183Z [err]    File "/usr/local/lib/python3.10/threading.py", line 1016, in _bootstrap_inner
+2026-06-28T21:17:26.143135083Z [err]      self.run()
+2026-06-28T21:17:26.143137723Z [err]    File "/usr/local/lib/python3.10/threading.py", line 953, in run
+2026-06-28T21:17:26.143139993Z [err]      self._target(*self._args, **self._kwargs)
+2026-06-28T21:17:26.143142203Z [err]    File "/app/start.py", line 119, in run_game_server
+2026-06-28T21:17:26.143144493Z [err]      srv.bind(('0.0.0.0', port))
+2026-06-28T21:17:26.143146913Z [err]  OSError: [Errno 98] Address already in use
+2026-06-28T21:17:26.143149623Z [err]  100.64.0.2 - - [28/Jun/2026 21:17:25] "GET /health HTTP/1.1" 200 -

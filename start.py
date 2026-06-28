@@ -113,10 +113,16 @@ def run_game_server():
             except Exception:
                 pass
 
-    port = 9339
+    port = int(os.environ.get('GAME_PORT', 9339))
     srv  = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    srv.bind(('0.0.0.0', port))
+    try:
+        srv.bind(('0.0.0.0', port))
+    except OSError as e:
+        print(f'[Game] FATAL: не удалось занять порт {port}: {e}')
+        print(f'[Game] Скорее всего PORT и GAME_PORT совпадают. '
+              f'HTTP-порт (PORT) и игровой (GAME_PORT) должны быть РАЗНЫМИ.')
+        return
     print(f'[Game] TCP server listening on port {port}')
     while True:
         srv.listen()
@@ -147,6 +153,18 @@ if __name__ == '__main__':
     print('=' * 55)
 
     setup_fingerprint()
+
+    # Проверка конфликта портов: HTTP (PORT) и игровой (GAME_PORT) обязаны различаться
+    http_port = int(os.environ.get('PORT', 8080))
+    game_port = int(os.environ.get('GAME_PORT', 9339))
+    if http_port == game_port:
+        print('=' * 55)
+        print(f'  ВНИМАНИЕ: PORT и GAME_PORT оба = {http_port}!')
+        print('  HTTP-сервер (CDN/админка) и игровой TCP-сервер не могут')
+        print('  слушать один порт. Игра не запустится.')
+        print(f'  Исправь в Railway: убери PORT=9339 (или поставь PORT=8080),')
+        print(f'  оставь GAME_PORT=9339 и настрой на него TCP Proxy.')
+        print('=' * 55)
 
     # Game server in background thread
     game_thread = threading.Thread(target=run_game_server, daemon=True, name='GameServer')
