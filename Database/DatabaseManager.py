@@ -5,12 +5,35 @@ import os
 
 # Путь к базе. На Railway укажи DB_PATH на смонтированный Volume,
 # например /data/player.sqlite — иначе база стирается при каждом редеплое.
-DB_PATH = os.environ.get('DB_PATH', '').strip() or \
-    os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.sqlite')
+_LOCAL_DB = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'player.sqlite')
 
-_db_dir = os.path.dirname(DB_PATH)
-if _db_dir:
-    os.makedirs(_db_dir, exist_ok=True)
+
+def _resolve_db_path():
+    """Выбираем рабочий путь к базе. Если заданный DB_PATH недоступен для
+    записи (например Volume не примонтирован) — откатываемся на локальный
+    файл, чтобы сервер не падал в 500, и громко сообщаем об этом."""
+    wanted = os.environ.get('DB_PATH', '').strip()
+    if not wanted:
+        return _LOCAL_DB
+
+    db_dir = os.path.dirname(wanted) or '.'
+    try:
+        os.makedirs(db_dir, exist_ok=True)
+        # Проверяем, что директория реально доступна для записи
+        probe = os.path.join(db_dir, '.write_test')
+        with open(probe, 'w') as f:
+            f.write('ok')
+        os.remove(probe)
+        print(f'[DB] Используется база: {wanted}')
+        return wanted
+    except Exception as e:
+        print(f'[DB] WARNING: путь {wanted} недоступен для записи ({e}).')
+        print(f'[DB] Откат на локальную базу {_LOCAL_DB} — данные НЕ переживут редеплой!')
+        print(f'[DB] Проверь, что в Railway создан Volume с Mount path = {db_dir}')
+        return _LOCAL_DB
+
+
+DB_PATH = _resolve_db_path()
 
 
 class DatabaseManager():
